@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shanya & Mostafa Celebration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { height: 100%; overflow: hidden; background: #000; font-family: 'Poppins', sans-serif; }
+
+        /* الخلفية الملونة المطلوبة */
+        .main-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #00e5ff, #7b2cff);
+            z-index: 1;
+        }
+
+        /* كانفاس الألعاب النارية */
+        #canvas { position: fixed; top: 0; left: 0; z-index: 2; pointer-events: none; }
+
+        /* طبقة الإيموجيات العائمة */
+        #emoji-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; }
+
+        /* النصوص في المنتصف */
+        .content {
+            position: relative; z-index: 10; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; height: 100vh; text-align: center; color: white;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .line { opacity: 0; transform: translateY(30px); transition: all 1.8s ease; margin: 15px 0; }
+        .line.show { opacity: 1; transform: translateY(0); }
+
+        /* تنسيق الأسماء Shanya (Cyan) و Mostafa (Purple) */
+        #names { font-family: 'Dancing Script', cursive; font-size: clamp(3rem, 10vw, 5rem); display: flex; gap: 20px; }
+        .cyan { color: #A7FFFF; text-shadow: 0 0 15px rgba(0,229,255,0.6); }
+        .purple { color: #E1BEE7; text-shadow: 0 0 15px rgba(123,31,162,0.6); }
+        .ampersand {
+            background: linear-gradient(to bottom, #A7FFFF, #E1BEE7);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        #days { font-size: clamp(1.5rem, 5vw, 2.5rem); font-weight: 600; }
+        
+        /* الجملة الأخيرة: صغيرة جداً وظهور متأخر */
+        #beluga { 
+            font-size: 0.9rem; font-weight: 300; letter-spacing: 4px; 
+            color: rgba(255,255,255,0.7); text-transform: uppercase;
+        }
+
+        .emoji { position: absolute; animation: floatUp linear forwards; }
+        @keyframes floatUp {
+            0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+            20% { opacity: 0.7; }
+            100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-bg"></div>
+    <canvas id="canvas"></canvas>
+    <div id="emoji-layer"></div>
+
+    <div class="content">
+        <div class="line" id="names">
+            <span class="cyan">Shanya</span>
+            <span class="ampersand">&</span>
+            <span class="purple">Mostafa</span>
+        </div>
+        <div class="line" id="days">365 days of friendship</div>
+        <div class="line" id="beluga">Still no beluga meat</div>
+    </div>
+
+    <script>
+        // --- تتابع ظهور النصوص ---
+        setTimeout(() => document.getElementById('names').classList.add('show'), 800);
+        setTimeout(() => document.getElementById('days').classList.add('show'), 3000);
+        setTimeout(() => document.getElementById('beluga').classList.add('show'), 7500);
+
+        // --- كود الألعاب النارية (المأخوذ من كودك والمدمج هنا) ---
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+
+        function resize() {
+            canvas.width = innerWidth;
+            canvas.height = innerHeight;
+        }
+        resize();
+        addEventListener("resize", resize);
+
+        class Firework {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height;
+                this.targetY = Math.random() * canvas.height / 2;
+                // ألوان الألعاب النارية (متوافقة مع طلبك)
+                const colors = ["#00e5ff", "#7b2cff", "#00ff9c", "#ffffff"];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.exploded = false;
+                this.particles = [];
+            }
+            update() {
+                if (!this.exploded) {
+                    this.y -= 7; // سرعة الصعود كشريط
+                    if (this.y <= this.targetY) {
+                        this.exploded = true;
+                        for (let i = 0; i < 40; i++) {
+                            this.particles.push({
+                                x: this.x,
+                                y: this.y,
+                                vx: (Math.random() - 0.5) * 6,
+                                vy: (Math.random() - 0.5) * 6,
+                                life: 60
+                            });
+                        }
+                    }
+                }
+            }
+            draw() {
+                if (!this.exploded) {
+                    ctx.fillStyle = this.color;
+                    ctx.fillRect(this.x, this.y, 3, 3); // شكل القذيفة الصاعدة
+                } else {
+                    this.particles.forEach(p => {
+                        ctx.fillStyle = this.color;
+                        ctx.fillRect(p.x, p.y, 2, 2);
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.life--;
+                    });
+                    this.particles = this.particles.filter(p => p.life > 0);
+                }
+            }
+        }
+
+        let fireworks = [];
+        function animate() {
+            // مسح الكانفاس مع تأثير "تلاشي" خفيف
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (Math.random() < 0.04) fireworks.push(new Firework());
+            fireworks.forEach(f => { f.update(); f.draw(); });
+            fireworks = fireworks.filter(f => !f.exploded || f.particles.length);
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // --- نظام الإيموجيات العائمة (بني، أزرق، بنفسجي، أخضر) ---
+        const emojiLayer = document.getElementById('emoji-layer');
+        const emojis = ['🧊', '💙', '❄️', '💜', '🥝', '💚', '🏔️', '🌌', '🩵', '🍏'];
+        
+        setInterval(() => {
+            const el = document.createElement('div');
+            el.className = 'emoji';
+            el.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+            el.style.left = Math.random() * 95 + 'vw';
+            el.style.fontSize = (Math.random() * 20 + 20) + 'px';
+            el.style.animationDuration = (Math.random() * 5 + 8) + 's';
+            emojiLayer.appendChild(el);
+            setTimeout(() => el.remove(), 13000);
+        }, 600);
+    </script>
+</body>
+</html>
